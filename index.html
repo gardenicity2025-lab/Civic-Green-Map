@@ -4,15 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
-    <!-- Fullscreen App Mode for Android + Chrome -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
 
-    <title>Civic Green Map - Fullscreen Wrapper</title>
+    <title>Civic Green Map - Custom Smooth Zoom</title>
 
-    <!-- Mapbox GL JS -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         /* Base styling for full-screen map container */
@@ -29,7 +28,35 @@
             width: 100vw;
             height: 100vh;
         }
-        /* Optional: remove Mapbox logo if your plan allows, otherwise required */
+        /* HIDE the native Mapbox controls we are replacing, as they lack granularity */
+        .mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right, .mapboxgl-ctrl-top-left, .mapboxgl-ctrl-top-right {
+            display: none !important;
+        }
+        /* Custom Button Styling */
+        .zoom-button {
+            /* Styling based on standard Mapbox controls, but using Tailwind for robust look */
+            /* Using flex for perfect centering */
+            @apply flex justify-center items-center w-8 h-8 text-lg font-bold bg-white text-gray-800 rounded-lg shadow-lg cursor-pointer transition-colors duration-150;
+            border: 1px solid rgba(0,0,0,0.1);
+            user-select: none;
+        }
+        .zoom-button:hover {
+            @apply bg-gray-100;
+        }
+        .zoom-controls-container {
+            /* Positioned top-right, mimicking native placement */
+            position: absolute;
+            top: 10px; 
+            right: 10px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        /* Optional: remove Mapbox logo if your plan allows */
         .mapboxgl-ctrl-logo { 
             display:none !important; 
         }
@@ -39,20 +66,27 @@
 
 <div id="map"></div>
 
+<div class="zoom-controls-container">
+    <div id="zoom-in" class="zoom-button border-b border-gray-200" title="Zoom In (+0.05)">+</div>
+    <div id="zoom-out" class="zoom-button" title="Zoom Out (-0.05)">-</div>
+</div>
+
 <script>
     // 1. Set the Mapbox Access Token
-    mapboxgl.accessToken = 'pk.eyJ1Ijoia2F2bmkiLCJhIjoiY2s5YjBqNGY1MGV4aTNobnk0amJncWZweCJ9.gZK_r9CYmb6ZN_mZVmgjNg';
+    mapboxgl.accessToken = 'pk.eyJ1Ijoia2F2bmkiLCJhIjoiY2s5YjBqNGY1MGV4aTnobnk0amJncWZweCJ9.gZK_r9CYmb6ZN_mZVmgjNg';
 
     // Map Details for Civic Green Map:
     const CIVIC_GREEN_STYLE = 'mapbox://styles/kavni/cmhkpt4uz00et01pjheur1zc1';
-    // Center: [Longitude, Latitude] = [34.778726, 32.07811]
     const INITIAL_CENTER = [34.778726, 32.07811]; 
     const INITIAL_ZOOM = 15.15;
+    
+    // Define the ultra-granular step size (0.05 is much smaller than the native minimum of 0.1)
+    const GRANULAR_STEP = 0.05; 
     
     // Initialize the map
     const map = new mapboxgl.Map({
         container: 'map',
-        style: CIVIC_GREEN_STYLE, // The Civic Green Map style
+        style: CIVIC_GREEN_STYLE,
         center: INITIAL_CENTER,
         zoom: INITIAL_ZOOM,
         pitch: 0,
@@ -61,18 +95,43 @@
         maxZoom: 20
     });
 
-    // Add zoom and rotation controls to the top-right corner
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // --- INTERACTIVITY ENHANCEMENTS ---
 
-    // Disable scroll zoom (optional—tablet friendly)
-    map.scrollZoom.disable();
-
-    // Allow pinch zoom and rotation on touch devices (recommended)
+    // 1. Enable Mouse Wheel Zoom (Scroll Zoom) - This is working well
+    map.scrollZoom.enable();
+    
+    // Allow pinch zoom and rotation on touch devices (essential for mobile/tablet)
     map.touchZoomRotate.enable();
+
+    // 2. Custom Granular Zoom Logic (to replace native +/-)
+    const zoomInButton = document.getElementById('zoom-in');
+    const zoomOutButton = document.getElementById('zoom-out');
+    
+    // Function to calculate and apply the new zoom level safely
+    function applyZoom(delta) {
+        const currentZoom = map.getZoom();
+        let newZoom = currentZoom + delta;
+
+        // Clamp the zoom level to the map's defined min/max zoom
+        if (newZoom < 10) newZoom = 10;
+        if (newZoom > 20) newZoom = 20;
+
+        // Use zoomTo with a smooth duration, mimicking mouse scroll
+        map.zoomTo(newZoom, { duration: 250 });
+    }
+
+    // Zoom In function: increases zoom by GRANULAR_STEP (0.05)
+    zoomInButton.addEventListener('click', () => {
+        applyZoom(GRANULAR_STEP);
+    });
+
+    // Zoom Out function: decreases zoom by GRANULAR_STEP (0.05)
+    zoomOutButton.addEventListener('click', () => {
+        applyZoom(-GRANULAR_STEP);
+    });
 
 </script>
 
 </body>
 </html>
-
-
+```eof
