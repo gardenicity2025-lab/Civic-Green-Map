@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!-- Fullscreen App Mode for Android + Chrome -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+
+    <title>Civic Green Map - Fullscreen Wrapper</title>
+
+    <!-- Mapbox GL JS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+
+    <style>
+        /* Base styling for full-screen map container */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Prevent scrolling */
+            background: #000;
+        }
+        #map {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+        /* Optional: remove Mapbox logo if your plan allows, otherwise required */
+        .mapboxgl-ctrl-logo { 
+            display:none !important; 
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script>
+    // 1. Set the Mapbox Access Token
+    mapboxgl.accessToken = 'pk.eyJ1Ijoia2F2bmkiLCJhIjoiY2s5YjBqNGY1MGV4aTNobnk0amJncWZweCJ9.gZK_r9CYmb6ZN_mZVmgjNg';
+
+    // Map Details for Civic Green Map:
+    const CIVIC_GREEN_STYLE = 'mapbox://styles/kavni/cmhkpt4uz00et01pjheur1zc1';
+    // Center: [Longitude, Latitude] = [34.778726, 32.07811]
+    const INITIAL_CENTER = [34.778726, 32.07811]; 
+    const INITIAL_ZOOM = 15.15;
+    
+    // Initialize the map
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: CIVIC_GREEN_STYLE, // The Civic Green Map style
+        center: INITIAL_CENTER,
+        zoom: INITIAL_ZOOM,
+        pitch: 0,
+        bearing: 0,
+        minZoom: 10,
+        maxZoom: 20
+    });
+
+    // Add zoom and rotation controls to the top-right corner
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    // Disable scroll zoom (optional—tablet friendly)
+    map.scrollZoom.disable();
+
+    // Allow pinch zoom and rotation on touch devices (recommended)
+    map.touchZoomRotate.enable();
+
+</script>
+
+</body>
+</html>
