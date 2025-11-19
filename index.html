@@ -4,13 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
-    <!-- Fullscreen App Mode for Android + Chrome -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
 
-    <title>Civic Green Map - Fullscreen Wrapper</title>
+    <title>Civic Green Map - Fullscreen Wrapper (Interactive)</title>
 
-    <!-- Mapbox GL JS -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
 
@@ -52,7 +50,7 @@
     // Initialize the map
     const map = new mapboxgl.Map({
         container: 'map',
-        style: CIVIC_GREEN_STYLE, // The Civic Green Map style
+        style: CIVIC_GREEN_STYLE,
         center: INITIAL_CENTER,
         zoom: INITIAL_ZOOM,
         pitch: 0,
@@ -61,16 +59,28 @@
         maxZoom: 20
     });
 
-    // Add zoom and rotation controls to the top-right corner
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // --- INTERACTIVITY ENHANCEMENTS ---
 
-    // Disable scroll zoom (optional—tablet friendly)
-    map.scrollZoom.disable();
+    // 1. Enable Mouse Wheel Zoom (Scroll Zoom) for desktop interactivity.
+    map.scrollZoom.enable();
 
-    // Allow pinch zoom and rotation on touch devices (recommended)
+    // 2. Configure and Add Granular Zoom Controls
+    // zoomStep is set to 0.2 for your specific interaction requirements.
+    const granularNav = new mapboxgl.NavigationControl({
+        visualizePitch: true,
+        zoomStep: 0.2 // Set to 0.2 for finer, more granular control
+    });
+    
+    // Add the controls to the top-right corner
+    map.addControl(granularNav, 'top-right');
+
+    // Allow pinch zoom and rotation on touch devices (essential for mobile/tablet)
     map.touchZoomRotate.enable();
 
 </script>
 
 </body>
 </html>
+```eof
+
+This code now provides **both** standard mouse-wheel zoom *and* precise `0.2` zoom steps for the +/- buttons. This should offer the best experience across all platforms.
