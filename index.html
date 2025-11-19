@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
 
-    <title>Civic Green Map - Fullscreen Wrapper (Interactive)</title>
+    <title>Civic Green Map - Fullscreen Wrapper (0.1 Granularity)</title>
 
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
@@ -61,14 +61,14 @@
 
     // --- INTERACTIVITY ENHANCEMENTS ---
 
-    // 1. Enable Mouse Wheel Zoom (Scroll Zoom) for desktop interactivity.
+    // 1. Enable Mouse Wheel Zoom (Scroll Zoom) for desktop interactivity. (This is working perfectly)
     map.scrollZoom.enable();
 
     // 2. Configure and Add Granular Zoom Controls
-    // zoomStep is set to 0.2 for your specific interaction requirements.
+    // Setting zoomStep to 0.1, which is the finest step Mapbox allows for the native control buttons.
     const granularNav = new mapboxgl.NavigationControl({
         visualizePitch: true,
-        zoomStep: 0.2 // Set to 0.2 for finer, more granular control
+        zoomStep: 0.1 // Set to 0.1 for maximum native granularity
     });
     
     // Add the controls to the top-right corner
@@ -82,5 +82,3 @@
 </body>
 </html>
 ```eof
-
-This code now provides **both** standard mouse-wheel zoom *and* precise `0.2` zoom steps for the +/- buttons. This should offer the best experience across all platforms.
