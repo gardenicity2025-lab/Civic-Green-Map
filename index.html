@@ -7,13 +7,13 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
 
-    <title>Civic Green Map - Ultra-Granular Button Fix (0.01 Step)</title>
+    <title>Civic Green Map - Ultra-Granular Button Fix (0.01 Step) - Stable Custom</title>
 
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
 
     <style>
-        /* Base styling for full-screen map container (from your stable code) */
+        /* Base styling for full-screen map container */
         html, body {
             margin: 0;
             padding: 0;
@@ -27,6 +27,47 @@
             width: 100vw;
             height: 100vh;
         }
+        
+        /* HIDE the native Mapbox controls added in JS (to prevent double controls) */
+        /* The native control is still added in JS but is immediately hidden */
+        .mapboxgl-ctrl-top-right .mapboxgl-ctrl-group {
+            display: none !important;
+        }
+
+        /* --- CUSTOM ZOOM BUTTON STYLING (Mimics Mapbox default) --- */
+        .custom-zoom-controls {
+            position: absolute;
+            top: 10px; /* Standard Mapbox top margin */
+            right: 10px; /* Standard Mapbox right margin */
+            z-index: 10;
+            background: #fff;
+            border-radius: 4px; /* Standard Mapbox border radius */
+            box-shadow: 0 0 0 2px rgba(0,0,0,.1); /* Standard Mapbox shadow */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .zoom-button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 29px;
+            height: 29px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
+        .zoom-button:first-child {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .zoom-button:hover {
+            background-color: #f0f0f0;
+        }
+
         /* Optional: remove Mapbox logo if your plan allows, otherwise required */
         .mapboxgl-ctrl-logo { 
             display:none !important; 
@@ -37,13 +78,17 @@
 
 <div id="map"></div>
 
+<div class="custom-zoom-controls">
+    <div id="zoom-in" class="zoom-button" title="Zoom In (+0.01)">+</div>
+    <div id="zoom-out" class="zoom-button" title="Zoom Out (−0.01)">−</div>
+</div>
+
 <script>
     // 1. Set the Mapbox Access Token
     mapboxgl.accessToken = 'pk.eyJ1Ijoia2F2bmkiLCJhIjoiY2s5YjBqNGY1MGV4aTnobnk0amJncWZweCJ9.gZK_r9CYmb6ZN_mZVmgjNg';
 
     // Map Details for Civic Green Map:
     const CIVIC_GREEN_STYLE = 'mapbox://styles/kavni/cmhkpt4uz00et01pjheur1zc1';
-    // Center: [Longitude, Latitude] = [34.778726, 32.07811]
     const INITIAL_CENTER = [34.778726, 32.07811]; 
     const INITIAL_ZOOM = 15.15;
     
@@ -64,66 +109,50 @@
 
     // --- INTERACTIVITY ENHANCEMENTS ---
 
-    // 1. Enable Mouse Wheel Zoom (Scroll Zoom) - This is working perfectly
+    // 1. Enable Mouse Wheel Zoom (Scroll Zoom)
     map.scrollZoom.enable();
 
-    // 2. Add the Native Mapbox Navigation Control (maintains stable layout)
-    const granularNav = new mapboxgl.NavigationControl({
-        visualizePitch: true,
-        // Use default zoomStep; we override the click behavior below
-        zoomStep: 1.0 
-    });
-    map.addControl(granularNav, 'top-right');
+    // 2. Add the Native Mapbox Navigation Control (REQUIRED FOR MAPBOX JS INTEGRATION)
+    // We still add it, but hide it using CSS (see <style> tag above) to prevent issues.
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     // Allow pinch zoom and rotation on touch devices (essential for mobile/tablet)
     map.touchZoomRotate.enable();
 
 
-    // 3. HIJACK NATIVE BUTTONS FOR GRANULAR STEP (0.01)
-    // Wait for the map to load to ensure the control buttons exist in the DOM.
-    map.on('load', () => {
-        // Target the Mapbox control group that holds the +/- buttons.
-        const zoomControlContainer = document.querySelector('.mapboxgl-ctrl-top-right .mapboxgl-ctrl-group');
+    // 3. CUSTOM GRANULAR ZOOM LOGIC (0.01)
+    const zoomInButton = document.getElementById('zoom-in');
+    const zoomOutButton = document.getElementById('zoom-out');
+    
+    // Function to calculate and apply the new zoom level safely
+    function applyZoom(delta) {
+        const currentZoom = map.getZoom();
+        // Use toFixed(3) to prevent floating-point precision errors
+        let newZoom = parseFloat((currentZoom + delta).toFixed(3)); 
 
-        if (zoomControlContainer) {
-            // Helper function to clone, replace, and re-bind events
-            const replaceButtonLogic = (originalButton, delta, titleText) => {
-                if (!originalButton) return;
+        // Clamp the zoom level
+        if (newZoom < 10) newZoom = 10; 
+        if (newZoom > 20) newZoom = 20; 
 
-                // 1. Clone the node to remove all existing Mapbox listeners (the key to the hijack)
-                const clone = originalButton.cloneNode(true);
-                originalButton.parentNode.replaceChild(clone, originalButton);
-                
-                // 2. Add the new, granular click handler
-                clone.addEventListener('click', () => {
-                    const currentZoom = map.getZoom();
-                    // Use toFixed(3) to prevent floating-point precision errors with 0.01 steps
-                    let newZoom = parseFloat((currentZoom + delta).toFixed(3)); 
-                    
-                    // Clamp the zoom level
-                    if (newZoom < 10) newZoom = 10; 
-                    if (newZoom > 20) newZoom = 20; 
+        // Apply smooth zoom
+        map.zoomTo(newZoom, { duration: 250 });
+    }
 
-                    // Apply smooth zoom
-                    map.zoomTo(newZoom, { duration: 250 });
-                });
-                
-                // 3. Update the tooltip
-                clone.setAttribute('title', titleText);
-            };
-
-            // Hijack Zoom In button (first child)
-            const zoomInButton = zoomControlContainer.children[0];
-            replaceButtonLogic(zoomInButton, GRANULAR_STEP, 'Zoom In (+0.01)');
-
-            // Hijack Zoom Out button (second child)
-            const zoomOutButton = zoomControlContainer.children[1];
-            replaceButtonLogic(zoomOutButton, -GRANULAR_STEP, 'Zoom Out (−0.01)');
-        }
+    // Zoom In function: increases zoom by GRANULAR_STEP (0.01)
+    zoomInButton.addEventListener('click', () => {
+        applyZoom(GRANULAR_STEP);
     });
+
+    // Zoom Out function: decreases zoom by GRANULAR_STEP (0.01)
+    zoomOutButton.addEventListener('click', () => {
+        applyZoom(-GRANULAR_STEP);
+    });
+
+    console.log("Custom 0.01 granular zoom buttons active. Native Mapbox controls are hidden via CSS.");
 
 </script>
 
 </body>
 </html>
 ```eof
+This method **avoids all DOM manipulation conflicts** by using standard HTML buttons outside of the Mapbox wrapper and hiding the native control entirely via CSS. This should guarantee map stability while providing the $\pm 0.01$ step.
