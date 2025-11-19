@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
 
-    <title>Civic Green Map - Custom Smooth Zoom</title>
+    <title>Civic Green Map - Custom Ultra-Smooth Zoom (0.025 Step)</title>
 
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
@@ -35,7 +35,6 @@
         /* Custom Button Styling */
         .zoom-button {
             /* Styling based on standard Mapbox controls, but using Tailwind for robust look */
-            /* Using flex for perfect centering */
             @apply flex justify-center items-center w-8 h-8 text-lg font-bold bg-white text-gray-800 rounded-lg shadow-lg cursor-pointer transition-colors duration-150;
             border: 1px solid rgba(0,0,0,0.1);
             user-select: none;
@@ -67,8 +66,8 @@
 <div id="map"></div>
 
 <div class="zoom-controls-container">
-    <div id="zoom-in" class="zoom-button border-b border-gray-200" title="Zoom In (+0.05)">+</div>
-    <div id="zoom-out" class="zoom-button" title="Zoom Out (-0.05)">-</div>
+    <div id="zoom-in" class="zoom-button border-b border-gray-200" title="Zoom In (+0.025)">+</div>
+    <div id="zoom-out" class="zoom-button" title="Zoom Out (-0.025)">-</div>
 </div>
 
 <script>
@@ -80,8 +79,8 @@
     const INITIAL_CENTER = [34.778726, 32.07811]; 
     const INITIAL_ZOOM = 15.15;
     
-    // Define the ultra-granular step size (0.05 is much smaller than the native minimum of 0.1)
-    const GRANULAR_STEP = 0.05; 
+    // Define the ultra-granular step size (0.025)
+    const GRANULAR_STEP = 0.025; 
     
     // Initialize the map
     const map = new mapboxgl.Map({
@@ -120,12 +119,12 @@
         map.zoomTo(newZoom, { duration: 250 });
     }
 
-    // Zoom In function: increases zoom by GRANULAR_STEP (0.05)
+    // Zoom In function: increases zoom by GRANULAR_STEP (0.025)
     zoomInButton.addEventListener('click', () => {
         applyZoom(GRANULAR_STEP);
     });
 
-    // Zoom Out function: decreases zoom by GRANULAR_STEP (0.05)
+    // Zoom Out function: decreases zoom by GRANULAR_STEP (0.025)
     zoomOutButton.addEventListener('click', () => {
         applyZoom(-GRANULAR_STEP);
     });
