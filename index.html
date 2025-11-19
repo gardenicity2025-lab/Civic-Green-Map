@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
 
-    <title>Civic Green Map - Granular Button Fix (0.025 Step)</title>
+    <title>Civic Green Map - Ultra-Granular Button Fix (0.01 Step)</title>
 
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
@@ -47,8 +47,8 @@
     const INITIAL_CENTER = [34.778726, 32.07811]; 
     const INITIAL_ZOOM = 15.15;
     
-    // Define the ultra-granular step size for the buttons
-    const GRANULAR_STEP = 0.025; 
+    // Define the ultra-granular step size for the buttons: 0.01
+    const GRANULAR_STEP = 0.01; 
 
     // Initialize the map
     const map = new mapboxgl.Map({
@@ -79,7 +79,7 @@
     map.touchZoomRotate.enable();
 
 
-    // 3. HIJACK NATIVE BUTTONS FOR GRANULAR STEP (0.025)
+    // 3. HIJACK NATIVE BUTTONS FOR GRANULAR STEP (0.01)
     // Wait for the map to load to ensure the control buttons exist in the DOM.
     map.on('load', () => {
         // Target the Mapbox control group that holds the +/- buttons.
@@ -97,7 +97,7 @@
                 // 2. Add the new, granular click handler
                 clone.addEventListener('click', () => {
                     const currentZoom = map.getZoom();
-                    // Use toFixed(3) to prevent floating-point precision errors with 0.025 steps
+                    // Use toFixed(3) to prevent floating-point precision errors with 0.01 steps
                     let newZoom = parseFloat((currentZoom + delta).toFixed(3)); 
                     
                     // Clamp the zoom level
@@ -114,11 +114,11 @@
 
             // Hijack Zoom In button (first child)
             const zoomInButton = zoomControlContainer.children[0];
-            replaceButtonLogic(zoomInButton, GRANULAR_STEP, 'Zoom In (+0.025)');
+            replaceButtonLogic(zoomInButton, GRANULAR_STEP, 'Zoom In (+0.01)');
 
             // Hijack Zoom Out button (second child)
             const zoomOutButton = zoomControlContainer.children[1];
-            replaceButtonLogic(zoomOutButton, -GRANULAR_STEP, 'Zoom Out (−0.025)');
+            replaceButtonLogic(zoomOutButton, -GRANULAR_STEP, 'Zoom Out (−0.01)');
         }
     });
 
