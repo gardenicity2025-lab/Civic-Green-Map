@@ -7,13 +7,13 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
 
-    <title>Civic Green Map - Fullscreen Wrapper (0.1 Granularity)</title>
+    <title>Civic Green Map - Granular Button Fix (0.025 Step)</title>
 
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
 
     <style>
-        /* Base styling for full-screen map container */
+        /* Base styling for full-screen map container (from your stable code) */
         html, body {
             margin: 0;
             padding: 0;
@@ -39,7 +39,7 @@
 
 <script>
     // 1. Set the Mapbox Access Token
-    mapboxgl.accessToken = 'pk.eyJ1Ijoia2F2bmkiLCJhIjoiY2s5YjBqNGY1MGV4aTNobnk0amJncWZweCJ9.gZK_r9CYmb6ZN_mZVmgjNg';
+    mapboxgl.accessToken = 'pk.eyJ1Ijoia2F2bmkiLCJhIjoiY2s5YjBqNGY1MGV4aTnobnk0amJncWZweCJ9.gZK_r9CYmb6ZN_mZVmgjNg';
 
     // Map Details for Civic Green Map:
     const CIVIC_GREEN_STYLE = 'mapbox://styles/kavni/cmhkpt4uz00et01pjheur1zc1';
@@ -47,6 +47,9 @@
     const INITIAL_CENTER = [34.778726, 32.07811]; 
     const INITIAL_ZOOM = 15.15;
     
+    // Define the ultra-granular step size for the buttons
+    const GRANULAR_STEP = 0.025; 
+
     // Initialize the map
     const map = new mapboxgl.Map({
         container: 'map',
@@ -61,21 +64,63 @@
 
     // --- INTERACTIVITY ENHANCEMENTS ---
 
-    // 1. Enable Mouse Wheel Zoom (Scroll Zoom) for desktop interactivity. (This is working perfectly)
+    // 1. Enable Mouse Wheel Zoom (Scroll Zoom) - This is working perfectly
     map.scrollZoom.enable();
 
-    // 2. Configure and Add Granular Zoom Controls
-    // Setting zoomStep to 0.1, which is the finest step Mapbox allows for the native control buttons.
+    // 2. Add the Native Mapbox Navigation Control (maintains stable layout)
     const granularNav = new mapboxgl.NavigationControl({
         visualizePitch: true,
-        zoomStep: 0.1 // Set to 0.1 for maximum native granularity
+        // Use default zoomStep; we override the click behavior below
+        zoomStep: 1.0 
     });
-    
-    // Add the controls to the top-right corner
     map.addControl(granularNav, 'top-right');
 
     // Allow pinch zoom and rotation on touch devices (essential for mobile/tablet)
     map.touchZoomRotate.enable();
+
+
+    // 3. HIJACK NATIVE BUTTONS FOR GRANULAR STEP (0.025)
+    // Wait for the map to load to ensure the control buttons exist in the DOM.
+    map.on('load', () => {
+        // Target the Mapbox control group that holds the +/- buttons.
+        const zoomControlContainer = document.querySelector('.mapboxgl-ctrl-top-right .mapboxgl-ctrl-group');
+
+        if (zoomControlContainer) {
+            // Helper function to clone, replace, and re-bind events
+            const replaceButtonLogic = (originalButton, delta, titleText) => {
+                if (!originalButton) return;
+
+                // 1. Clone the node to remove all existing Mapbox listeners (the key to the hijack)
+                const clone = originalButton.cloneNode(true);
+                originalButton.parentNode.replaceChild(clone, originalButton);
+                
+                // 2. Add the new, granular click handler
+                clone.addEventListener('click', () => {
+                    const currentZoom = map.getZoom();
+                    // Use toFixed(3) to prevent floating-point precision errors with 0.025 steps
+                    let newZoom = parseFloat((currentZoom + delta).toFixed(3)); 
+                    
+                    // Clamp the zoom level
+                    if (newZoom < 10) newZoom = 10; 
+                    if (newZoom > 20) newZoom = 20; 
+
+                    // Apply smooth zoom
+                    map.zoomTo(newZoom, { duration: 250 });
+                });
+                
+                // 3. Update the tooltip
+                clone.setAttribute('title', titleText);
+            };
+
+            // Hijack Zoom In button (first child)
+            const zoomInButton = zoomControlContainer.children[0];
+            replaceButtonLogic(zoomInButton, GRANULAR_STEP, 'Zoom In (+0.025)');
+
+            // Hijack Zoom Out button (second child)
+            const zoomOutButton = zoomControlContainer.children[1];
+            replaceButtonLogic(zoomOutButton, -GRANULAR_STEP, 'Zoom Out (−0.025)');
+        }
+    });
 
 </script>
 
